@@ -241,6 +241,7 @@
   // drag vs tap
   iconEls.forEach(function(ic){
     var start=null,moved=false;
+    ic.addEventListener('dragstart',function(e){e.preventDefault();}); // stop native image/text drag on desktop
     ic.addEventListener('pointerdown',function(e){
       if(e.button===1||e.button===2)return;
       start={x:e.clientX,y:e.clientY,ox:parseFloat(ic.style.left)||0,oy:parseFloat(ic.style.top)||0};
