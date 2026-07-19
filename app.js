@@ -23,7 +23,7 @@
     {id:'shell', mid:'shell.first_command',name:'Run a terminal command',   how:'open Terminal, type \u2018help\u2019, hit enter'},
     {id:'skills',mid:'skills.probed',      name:'Probe a skill',            how:'in Skills, tap any skill chip'},
     {id:'agents',mid:'agents.interviewed', name:'Interview the AI agents',  how:'in Projects, tap all 3 AMORE cards'},
-    {id:'game',  mid:'minigame.debug_run', name:'Finish a Squash Bugs round',how:'open Squash Bugs, survive 20 seconds'},
+    {id:'game',  mid:'minigame.debug_run', name:'Play an arcade game',how:'open Arcade, finish any one game'},
     {id:'visit', mid:'product.visited',    name:'Visit nocaps.in',          how:'tap a nocaps.in link (in Projects or Experience)'},
     {id:'wall',  mid:'wallpaper.disturbed',name:'Disturb the wallpaper',    how:'tap empty home-screen space 3 times'},
     {id:'inbox', mid:'inbox.reached',      name:'Reach the inbox',          how:'open Contact Me'}
@@ -68,7 +68,7 @@
   var APPS={
     readme:'Start Here', about:'About Me', track:'Experience',
     skills:'Skills', services:'Services', projects:'Projects',
-    terminal:'Terminal', game:'Squash Bugs', contact:'Contact Me'
+    terminal:'Terminal', game:'Arcade', contact:'Contact Me'
   };
   // Icon captions and window title bars are hand-written in the HTML too (so the
   // page still reads correctly with JS disabled), but here they get reasserted
@@ -93,6 +93,9 @@
     w.style.zIndex=++zTop;
     $$('.task-item').forEach(function(t){t.classList.toggle('active',t.dataset.app===w.dataset.app)});
   }
+  function syncWindowState(){
+    document.body.classList.toggle('has-window', $$('.window.open').length>0);
+  }
   function openApp(app){
     var w=win(app);if(!w)return;
     if(isMobile()){
@@ -113,17 +116,20 @@
       openedDistinct[app]=true;
       if(Object.keys(openedDistinct).length>=5)award('apps');
       if(app==='contact')award('inbox');
+      if(app==='game')showArcade('menu');
       if(app==='terminal'&&!isMobile())setTimeout(function(){$('#termInput').focus()},80);
     }
     focusWin(w);
     $('#startMenu').classList.remove('open');
     $('#sigPanel').classList.remove('open');
+    syncWindowState();
   }
   function closeApp(app){
     var w=win(app);if(!w)return;
     w.classList.remove('open');
     removeTask(app);
     if(app==='game')stopGame(false);
+    syncWindowState();
   }
   function addTask(app){
     if(document.querySelector('.task-item[data-app="'+app+'"]'))return;
@@ -133,6 +139,7 @@
       var w=win(app);
       if(!w.classList.contains('open')){w.classList.add('open');}
       focusWin(w);
+      syncWindowState();
     });
     $('#taskItems').appendChild(b);
   }
@@ -152,6 +159,7 @@
     if(minBtn)minBtn.addEventListener('click',function(){
       w.classList.remove('open');
       if(w.dataset.app==='game')stopGame(false);
+      syncWindowState();
     });
   });
   function backAction(){
@@ -551,7 +559,7 @@
       if(sigCount()<SIGNALS.length)print('hint: open apps. click modules. play. everything reacts.','t-dim');
     },
     'nocaps':function(){print('opening nocaps.in in a new tab…','t-ok');window.open('https://www.nocaps.in','_blank','noopener');award('visit');},
-    'game':function(){print('launching Squash Bugs','t-amb');openApp('game');},
+    'game':function(){print('launching Arcade','t-amb');openApp('game');},
     'play':function(){CMDS.game();},
     'clear':function(){out.innerHTML='';},
     'cls':function(){out.innerHTML='';},
@@ -674,7 +682,28 @@
     a.addEventListener('click',function(){award('visit')});
   });
 
-  /* ============ game ============ */
+  /* ============ ARCADE ============ */
+  var arcadeViews={menu:$('#arcadeMenu'),squash:$('#gameSquash'),memory:$('#gameMemory'),type:$('#gameType')};
+  function showArcade(view){
+    // stop any running game before switching
+    haltSquash();haltType();
+    Object.keys(arcadeViews).forEach(function(k){
+      if(arcadeViews[k])arcadeViews[k].hidden=(k!==view);
+    });
+    if(view==='memory')initMemory();
+  }
+  function stopGame(){ // called when the arcade window is closed/minimized
+    haltSquash();haltType();
+    showArcade('menu');
+  }
+  $$('.arcade-card').forEach(function(c){
+    c.addEventListener('click',function(){showArcade(c.getAttribute('data-game'))});
+  });
+  $$('[data-arcade-back]').forEach(function(b){
+    b.addEventListener('click',function(){showArcade('menu')});
+  });
+
+  /* ---- Game 1: Squash Bugs ---- */
   var arena=$('#arena'),arenaMsg=$('#arenaMsg');
   var gScore=0,gBest=0,gTime=20,spawnIv=null,clockIv=null,running=false;
   var BUGS=['🐛','🪲','🦟','🐞'];
@@ -716,7 +745,7 @@
     });
     arena.appendChild(b);
   }
-  function startGame(){
+  function startSquash(){
     gScore=0;gTime=20;running=true;
     $('#gScore').textContent='0';$('#gTime').textContent='20';
     arenaMsg.style.display='none';
@@ -727,32 +756,136 @@
     },520);
     clockIv=setInterval(function(){
       gTime--;$('#gTime').textContent=gTime;
-      if(gTime<=0)stopGame(true);
+      if(gTime<=0)endSquash();
     },1000);
   }
-  function stopGame(finished){
+  function haltSquash(){
     clearInterval(spawnIv);clearInterval(clockIv);
-    if(!running)return;
     running=false;
-    $$('.bug').forEach(function(b){b.remove()});
-    if(finished){
-      if(gScore>gBest){gBest=gScore;$('#gBest').textContent=gBest;}
-      var verdict;
-      if(gScore<6)verdict='the bugs won this round. it happens to the best of us.';
-      else if(gScore<12)verdict='solid debugging instincts.';
-      else if(gScore<20)verdict='senior-level reflexes. impressive.';
-      else verdict='are you… a linter?';
-      arenaMsg.innerHTML='<div class="big">'+gScore+' squashed</div><p>'+verdict+'</p><button class="btn btn-primary" id="gameAgain">run again</button>';
-      arenaMsg.style.display='flex';
-      $('#gameAgain').addEventListener('click',startGame);
-      award('game');
+    if(arena)$$('.bug').forEach(function(b){b.remove()});
+  }
+  function endSquash(){
+    if(!running)return;
+    haltSquash();
+    if(gScore>gBest){gBest=gScore;$('#gBest').textContent=gBest;$('#bestSquash').textContent=gBest;}
+    var verdict;
+    if(gScore<6)verdict='the bugs won this round. it happens to the best of us.';
+    else if(gScore<12)verdict='solid debugging instincts.';
+    else if(gScore<20)verdict='senior-level reflexes. impressive.';
+    else verdict='are you… a linter?';
+    arenaMsg.innerHTML='<div class="big">'+gScore+' squashed</div><p>'+verdict+'</p><button class="btn btn-primary" id="gameAgain">run again</button>';
+    arenaMsg.style.display='flex';
+    $('#gameAgain').addEventListener('click',startSquash);
+    award('game');
+  }
+  $('#gameStart').addEventListener('click',startSquash);
+
+  /* ---- Game 2: Stack Match (memory) ---- */
+  var STACK=['Java','Python','⚛️','Flask','🐘','Redis','Grok','AWS'];
+  var mFirst=null,mLock=false,mMoves=0,mPairs=0,mBest=null,mInit=false;
+  function initMemory(){
+    mInit=true;mFirst=null;mLock=false;mMoves=0;mPairs=0;
+    $('#mMoves').textContent='0';$('#mPairs').textContent='0';
+    $('#memoryDone').hidden=true;
+    var board=$('#memoryBoard');board.innerHTML='';
+    var deck=STACK.concat(STACK);
+    for(var i=deck.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=deck[i];deck[i]=deck[j];deck[j]=t;}
+    deck.forEach(function(val){
+      var card=document.createElement('button');
+      card.className='mcard';card.setAttribute('aria-label','card');
+      card.innerHTML='<span class="mface mfront">?</span><span class="mface mback">'+val+'</span>';
+      card.dataset.val=val;
+      card.addEventListener('click',function(){flipCard(card)});
+      board.appendChild(card);
+    });
+  }
+  function flipCard(card){
+    if(mLock||card.classList.contains('flipped')||card.classList.contains('matched'))return;
+    card.classList.add('flipped');
+    if(!mFirst){mFirst=card;return;}
+    mMoves++;$('#mMoves').textContent=mMoves;
+    if(mFirst.dataset.val===card.dataset.val){
+      mFirst.classList.add('matched');card.classList.add('matched');
+      mFirst=null;mPairs++;$('#mPairs').textContent=mPairs;
+      if(mPairs===STACK.length)endMemory();
     }else{
-      arenaMsg.innerHTML='<div class="big">ready?</div><p>🐛 = +1 · 🦋 = +3 · 💣 = do NOT tap. production is in 20 seconds.</p><button class="btn btn-primary" id="gameStart2">deploy →</button>';
-      arenaMsg.style.display='flex';
-      $('#gameStart2').addEventListener('click',startGame);
+      mLock=true;
+      var a=mFirst,b=card;mFirst=null;
+      setTimeout(function(){a.classList.remove('flipped');b.classList.remove('flipped');mLock=false;},760);
     }
   }
-  $('#gameStart').addEventListener('click',startGame);
+  function endMemory(){
+    if(mBest===null||mMoves<mBest){mBest=mMoves;$('#mBest').textContent=mBest;$('#bestMemory').textContent=mBest;}
+    var d=$('#memoryDone');
+    d.innerHTML='<div class="big">matched! 🎉</div><p>'+mMoves+' moves — that\u2019s my whole stack, paired up.</p><button class="btn btn-primary" id="memAgain">play again</button>';
+    d.hidden=false;
+    $('#memAgain').addEventListener('click',initMemory);
+    award('game');
+  }
+
+  /* ---- Game 3: Type Speed ---- */
+  var PROMPTS=['git commit -m "fix"','npm run build','sudo reboot','SELECT * FROM users','docker compose up','flask run','print("hello")','git push origin main','mvn clean install','SELECT * FROM matches','pip install grok','npx create-app'];
+  var tArena=$('#typeArena'),typeMsg=$('#typeMsg');
+  var tScore=0,tBest=0,tTime=25,tClock=null,tRunning=false,tCurrent='';
+  function startType(){
+    tScore=0;tTime=25;tRunning=true;
+    $('#tScore').textContent='0';$('#tTime').textContent='25';
+    nextPrompt();
+    tClock=setInterval(function(){
+      tTime--;$('#tTime').textContent=tTime;
+      if(tTime<=0)endType();
+    },1000);
+  }
+  function nextPrompt(){
+    tCurrent=PROMPTS[Math.floor(Math.random()*PROMPTS.length)];
+    tArena.innerHTML='<div class="type-prompt" id="typePrompt"></div>'+
+      '<input class="type-input" id="typeInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="type here">'+
+      '<div class="type-hint">type it exactly, then press enter</div>';
+    renderPrompt('');
+    var inp=$('#typeInput');
+    inp.focus();
+    inp.addEventListener('input',function(){renderPrompt(inp.value)});
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){
+        if(inp.value===tCurrent){
+          tScore++;$('#tScore').textContent=tScore;
+          nextPrompt();
+        }else{
+          inp.classList.remove('shake');void inp.offsetWidth;inp.classList.add('shake');
+        }
+      }
+    });
+  }
+  function renderPrompt(typed){
+    var el=$('#typePrompt');if(!el)return;
+    var html='';
+    for(var i=0;i<tCurrent.length;i++){
+      var c=tCurrent[i].replace('<','&lt;');
+      if(i<typed.length){
+        html+='<span class="'+(typed[i]===tCurrent[i]?'tc-ok':'tc-bad')+'">'+c+'</span>';
+      }else{
+        html+='<span class="tc-rest">'+c+'</span>';
+      }
+    }
+    el.innerHTML=html;
+  }
+  function haltType(){
+    clearInterval(tClock);tRunning=false;
+  }
+  function endType(){
+    if(!tRunning)return;
+    haltType();
+    if(tScore>tBest){tBest=tScore;$('#tBest').textContent=tBest;$('#bestType').textContent=tBest;}
+    var verdict;
+    if(tScore<4)verdict='warming up. the keyboard is mightier with practice.';
+    else if(tScore<8)verdict='nice pace — real dev fingers.';
+    else if(tScore<12)verdict='fast. you\u2019ve shipped things at 2am, haven\u2019t you.';
+    else verdict='inhuman. are you sure you\u2019re not an LLM?';
+    tArena.innerHTML='<div class="msg"><div class="big">'+tScore+' commands</div><p>'+verdict+'</p><button class="btn btn-primary" id="typeAgain">go again</button></div>';
+    $('#typeAgain').addEventListener('click',startType);
+    award('game');
+  }
+  $('#typeStart').addEventListener('click',startType);
 
   /* ============ overdrive ============ */
   var KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
