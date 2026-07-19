@@ -48,7 +48,7 @@
 
   .icons{position:absolute;inset:0;}
   html:not(.js) .icons{display:none;}
-  .icon{position:absolute;width:92px;padding:12px 6px 10px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid transparent;transition:background .15s,border-color .15s,transform .15s,box-shadow .15s;cursor:grab;touch-action:none;}
+  .icon{position:absolute;width:92px;padding:12px 6px 10px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:8px;border:1px solid transparent;transition:background .15s,border-color .15s,transform .15s,box-shadow .15s;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;}
   .icon:hover{background:rgba(255,255,255,.045);border-color:var(--line);transform:translateY(-2px);}
   .icon.dragging{cursor:grabbing;z-index:30;transition:none;transform:scale(1.08);border-color:var(--acc);box-shadow:0 16px 40px -12px rgba(0,0,0,.75),0 0 22px rgba(var(--acc-rgb),.25);}
   .icon:focus-visible{outline:none;background:rgba(var(--acc-rgb),.09);border-color:var(--acc);transform:translateY(-2px);animation:iconSelect 1.4s ease-in-out infinite;}
@@ -348,12 +348,16 @@
     /* on phones the pad lives on the home screen only — hide it while reading an app
        so it never covers content */
     body.has-window .gamepad{display:none;}
-    .gamepad{left:8px;right:auto;transform:none;bottom:calc(var(--bar-h) + 10px);gap:20px;padding:0;width:auto;background:none;border:none;backdrop-filter:none;box-shadow:none;border-radius:0;}
-    .dpad{width:104px;height:104px;}
-    .dbtn.up,.dbtn.down{left:37px;width:30px;height:36px;}
-    .dbtn.left,.dbtn.right{top:37px;width:36px;height:30px;}
-    .dbtn.center{top:37px;left:37px;width:30px;height:30px;}
-    .abtn{width:50px;height:50px;font-size:16px;}
-    .ab{gap:12px;padding-bottom:16px;}
-    .abtn::after{color:var(--soft);text-shadow:0 1px 3px rgba(0,0,0,.9);}
+    .gamepad{left:10px;right:auto;transform:none;bottom:calc(var(--bar-h) + 14px);gap:16px;padding:0;width:auto;background:none;border:none;backdrop-filter:none;box-shadow:none;border-radius:0;align-items:center;}
+    .dpad{width:100px;height:100px;}
+    .dbtn.up,.dbtn.down{left:35px;width:30px;height:34px;}
+    .dbtn.left,.dbtn.right{top:35px;width:34px;height:30px;}
+    .dbtn.center{top:35px;left:35px;width:30px;height:30px;}
+    .ab{gap:14px;align-items:center;padding-bottom:14px;}
+    .abtn{width:46px;height:46px;font-size:15px;background:radial-gradient(circle at 40% 34%,#8267cf,#41348a 80%);box-shadow:inset 0 1px 2px rgba(255,255,255,.35),0 4px 10px -4px rgba(0,0,0,.7);}
+    .abtn::before{inset:5px 5px 58% 5px;background:linear-gradient(180deg,rgba(255,255,255,.28),transparent);}
+    .abtn.b{transform:none;}                    /* same baseline as A on mobile */
+    .abtn.b:active,.abtn.b.press{transform:scale(.85);filter:brightness(1.5);}
+    .abtn::after{bottom:-15px;font-size:8.5px;color:var(--soft);text-shadow:0 1px 3px rgba(0,0,0,.95);}
+    .abtn.b::after{bottom:-15px;}
   }
