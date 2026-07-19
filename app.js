@@ -37,14 +37,23 @@
     sigList.appendChild(li);
   });
   function sigCount(){return SIGNALS.filter(function(s){return got[s.id]}).length}
+  function renderProgress(){
+    var n=sigCount(),total=SIGNALS.length;
+    var pct=Math.round(n/total*100);
+    var pctEl=$('#sigPct');if(pctEl)pctEl.textContent=pct+'%';
+    var lbl=$('#sigPctLabel');if(lbl)lbl.textContent=pct+'% completed';
+    var frac=$('#sigPctFrac');if(frac)frac.textContent=n+' / '+total;
+    var fill=$('#sigProgressFill');if(fill)fill.style.width=pct+'%';
+  }
   function award(id){
     if(got[id])return;
     got[id]=true;
-    $('#sigCount').textContent=sigCount();
     var li=$('#sig-'+id);
     li.classList.add('got');li.querySelector('.mk').textContent='[x]';
+    renderProgress();
     var s=SIGNALS.filter(function(x){return x.id===id})[0];
-    toast('signal earned: '+s.name+'  ('+sigCount()+'/'+SIGNALS.length+')');
+    var pct=Math.round(sigCount()/SIGNALS.length*100);
+    toast('signal earned: '+s.name+'  ('+pct+'% completed)');
     if(sigCount()===SIGNALS.length)setTimeout(showReport,700);
   }
   $('#sigChip').addEventListener('click',function(e){
@@ -85,6 +94,7 @@
     if(t&&APPS[key])t.textContent=APPS[key];
   });
   $$('.sig-total').forEach(function(el){el.textContent=SIGNALS.length;});
+  renderProgress();
   var zTop=10, openedDistinct={}, cascade=0;
   function win(app){return document.querySelector('.window[data-app="'+app+'"]')}
   function focusWin(w){
@@ -147,8 +157,131 @@
     var t=document.querySelector('.task-item[data-app="'+app+'"]');
     if(t)t.remove();
   }
-  $$('.icon').forEach(function(ic){
-    ic.addEventListener('click',function(){openApp(ic.dataset.open)});
+  /* ============ safe storage (no-op where localStorage is blocked) ============ */
+  var store={
+    get:function(k){try{return window.localStorage.getItem(k)}catch(e){return null}},
+    set:function(k,v){try{window.localStorage.setItem(k,v)}catch(e){}},
+    remove:function(k){try{window.localStorage.removeItem(k)}catch(e){}}
+  };
+
+  /* ============ draggable desktop icons ============ */
+  var iconEls=$$('.icon[data-open]');
+  var iconsBox=$('#icons')||iconEls[0].parentElement;
+  var ICON_KEY='aaryan-os-icons-v1';
+
+  function defaultLayout(){
+    // arrange icons in a grid based on current viewport, matching the old look
+    var mobile=isMobile();
+    var pos={};
+    if(mobile){
+      var cellW=iconsBox.clientWidth/4, cellH=96;
+      iconEls.forEach(function(ic,i){
+        pos[ic.dataset.open]={x:4+(i%4)*cellW+(cellW-80)/2,y:(Math.floor(i/4))*cellH};
+      });
+    }else{
+      // desktop: columns of 5, like the original grid
+      var colW=100, rowH=92, perCol=5;
+      iconEls.forEach(function(ic,i){
+        var col=Math.floor(i/perCol), row=i%perCol;
+        pos[ic.dataset.open]={x:14+col*colW,y:18+row*rowH};
+      });
+    }
+    return pos;
+  }
+  function applyLayout(pos){
+    iconEls.forEach(function(ic){
+      var p=pos[ic.dataset.open];
+      if(p){ic.style.left=p.x+'px';ic.style.top=p.y+'px';}
+    });
+  }
+  function currentLayout(){
+    var pos={};
+    iconEls.forEach(function(ic){
+      pos[ic.dataset.open]={x:parseFloat(ic.style.left)||0,y:parseFloat(ic.style.top)||0};
+    });
+    return pos;
+  }
+  function clampIcon(ic){
+    var maxX=iconsBox.clientWidth-ic.offsetWidth;
+    var maxY=iconsBox.clientHeight-ic.offsetHeight;
+    var x=Math.min(Math.max(0,parseFloat(ic.style.left)||0),Math.max(0,maxX));
+    var y=Math.min(Math.max(0,parseFloat(ic.style.top)||0),Math.max(0,maxY));
+    ic.style.left=x+'px';ic.style.top=y+'px';
+  }
+  function loadIcons(){
+    var saved=null;
+    try{saved=JSON.parse(store.get(ICON_KEY)||'null')}catch(e){saved=null}
+    var base=defaultLayout();
+    if(saved){ // merge: use saved where present, default for any new icon
+      iconEls.forEach(function(ic){
+        if(!saved[ic.dataset.open])saved[ic.dataset.open]=base[ic.dataset.open];
+      });
+      applyLayout(saved);
+    }else{
+      applyLayout(base);
+    }
+    iconEls.forEach(clampIcon);
+  }
+  function saveIcons(){store.set(ICON_KEY,JSON.stringify(currentLayout()));}
+  function resetIcons(){
+    store.remove(ICON_KEY);
+    applyLayout(defaultLayout());
+    iconEls.forEach(clampIcon);
+    toast('desktop layout reset');
+  }
+
+  // lay them out now (and keep them sensible on resize if never moved)
+  loadIcons();
+  var iconsWereMoved=!!store.get(ICON_KEY);
+  window.addEventListener('resize',function(){
+    if(!iconsWereMoved)applyLayout(defaultLayout());
+    iconEls.forEach(clampIcon);
+  });
+
+  // drag vs tap
+  iconEls.forEach(function(ic){
+    var start=null,moved=false;
+    ic.addEventListener('pointerdown',function(e){
+      if(e.button===1||e.button===2)return;
+      start={x:e.clientX,y:e.clientY,ox:parseFloat(ic.style.left)||0,oy:parseFloat(ic.style.top)||0};
+      moved=false;
+      ic.setPointerCapture(e.pointerId);
+    });
+    ic.addEventListener('pointermove',function(e){
+      if(!start)return;
+      var dx=e.clientX-start.x,dy=e.clientY-start.y;
+      if(!moved&&Math.abs(dx)+Math.abs(dy)<6)return; // small movement = still a tap
+      if(!moved){moved=true;ic.classList.add('dragging');}
+      var nx=start.ox+dx,ny=start.oy+dy;
+      var maxX=iconsBox.clientWidth-ic.offsetWidth;
+      var maxY=iconsBox.clientHeight-ic.offsetHeight;
+      ic.style.left=Math.min(Math.max(0,nx),Math.max(0,maxX))+'px';
+      ic.style.top=Math.min(Math.max(0,ny),Math.max(0,maxY))+'px';
+    });
+    function end(e){
+      if(!start)return;
+      var wasMoved=moved;
+      start=null;
+      if(wasMoved){
+        ic.classList.remove('dragging');
+        iconsWereMoved=true;
+        saveIcons();
+      }else{
+        // clean tap → move the controller cursor here, then open
+        var idx=navIcons.indexOf(ic);
+        if(idx>=0){navIcons.forEach(function(x){x.classList.remove('nav-selected')});navIdx=idx;ic.classList.add('nav-selected');}
+        openApp(ic.dataset.open);
+      }
+    }
+    ic.addEventListener('pointerup',end);
+    ic.addEventListener('pointercancel',function(){
+      if(start&&moved)ic.classList.remove('dragging');
+      start=null;
+    });
+    // keyboard/gamepad still open via Enter/A even though click is now drag-aware
+    ic.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();openApp(ic.dataset.open);}
+    });
   });
   $$('.window').forEach(function(w){
     w.addEventListener('pointerdown',function(){focusWin(w)});
@@ -545,14 +678,16 @@
       print('  ls — list apps · open &lt;app&gt; — launch one');
       print('  game — squash some bugs · nocaps — visit the product');
       print("  sudo hire aaryan — you know what to do",'t-amb');
+      print('  reset — restore desktop icon layout','t-dim');
       print('  signals · matrix · overdrive · whoami · clear','t-dim');
     },
+    'reset':function(){print('restoring default desktop layout…','t-ok');resetIcons();},
     'ls':function(){
       print(Object.keys(APPS).map(function(a){return APPS[a]}).join('   '),'t-ok');
       print("open one with: open &lt;name&gt; — e.g. 'open projects'",'t-dim');
     },
     'signals':function(){
-      print('behavioral signals — '+sigCount()+'/'+SIGNALS.length,'t-amb');
+      print('side quest — '+Math.round(sigCount()/SIGNALS.length*100)+'% completed ('+sigCount()+'/'+SIGNALS.length+')','t-amb');
       SIGNALS.forEach(function(s){
         print('  ['+(got[s.id]?'x':' ')+'] '+s.name+(got[s.id]?'':' — '+s.how),got[s.id]?'t-ok':'t-dim');
       });
