@@ -308,7 +308,7 @@
     <button class="start" id="startBtn" aria-expanded="false"><span class="a">▲</span> aaryan.sys</button>
     <div id="taskItems"></div>
     <div class="tray">
-      <button class="sig-chip attn" id="sigChip" aria-expanded="false"><span class="dot"></span>signals <strong id="sigCount">0</strong>/<span class="sig-total">9</span></button>
+      <button class="sig-chip attn" id="sigChip" aria-expanded="false"><span class="dot"></span>side quest <strong id="sigPct">0%</strong></button>
       <span id="clock">--:--</span>
     </div>
   </div>
@@ -318,6 +318,10 @@
 
 <div class="sig-panel" id="sigPanel">
   <h4>side quest — compatibility report</h4>
+  <div class="sig-progress">
+    <div class="sig-progress-head"><span id="sigPctLabel">0% completed</span><span id="sigPctFrac">0 / 9</span></div>
+    <div class="sig-progress-bar"><div class="sig-progress-fill" id="sigProgressFill"></div></div>
+  </div>
   <p class="sig-intro">Purely for fun — a taste of the kind of interactive product I build. Do these <strong><span class="sig-total">9</span> things</strong> and AMORE NET (my matching engine) prints your official visitor × Aaryan compatibility report.</p>
   <ul id="signalList"></ul>
   <div class="sig-hint">Grey text under each one tells you exactly how to earn it.</div>
@@ -346,7 +350,7 @@
     <h3 id="wTitle">welcome to AARYAN OS</h3>
     <p class="modal-sub">a portfolio you operate — not scroll</p>
     <ul class="welcome-list">
-      <li><strong>Tap the icons.</strong> Each one opens an app — my work, skills, services, contact.</li>
+      <li><strong>Tap the icons</strong> to open apps — or <strong>drag them anywhere</strong> to rearrange your desktop. It remembers your layout.</li>
       <li><strong>Play the side quest.</strong> Do <span class="sig-total">9</span> small things around the OS to earn <span class="k">signals</span> — the glowing counter in the corner tracks them and tells you exactly how. It's just for fun.</li>
       <li>Hit <span class="k"><span class="sig-total">9</span>/<span class="sig-total">9</span></span> and AMORE NET — the matching engine from my product — prints your <strong>compatibility report</strong>, confetti included.</li>
     </ul>
