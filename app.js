@@ -330,14 +330,18 @@
     if(typingInField()||overlayOpen())return;
     if($$('.window.open').length)return; // when a window is open, arrows scroll it instead (handled in act)
     if(!navIcons.length)return;
-    if(navIdx<0){highlight(0);return;}
+    if(navIdx<0||navIcons[navIdx].style.display==='none'){
+      // pick first visible icon
+      for(var k=0;k<navIcons.length;k++){if(navIcons[k].style.display!=='none'){highlight(k);return;}}
+      return;
+    }
     var cur={
       cx:navIcons[navIdx].getBoundingClientRect().left+navIcons[navIdx].offsetWidth/2,
       cy:navIcons[navIdx].getBoundingClientRect().top+navIcons[navIdx].offsetHeight/2
     };
     var best=-1,bestScore=Infinity;
     navIcons.forEach(function(el,i){
-      if(i===navIdx)return;
+      if(i===navIdx||el.style.display==='none')return;
       var r=el.getBoundingClientRect();
       var ix=r.left+r.width/2,iy=r.top+r.height/2;
       var dx=ix-cur.cx,dy=iy-cur.cy,primary,ortho;
