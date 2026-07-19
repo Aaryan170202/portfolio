@@ -34,7 +34,7 @@
       <button class="icon" data-open="services"><span class="glyph">🤝</span><span class="lbl">Services</span></button>
       <button class="icon" data-open="projects"><span class="glyph">🚀</span><span class="lbl">Projects</span></button>
       <button class="icon" data-open="terminal"><span class="glyph">›_</span><span class="lbl">terminal</span></button>
-      <button class="icon" data-open="game"><span class="glyph">🐛</span><span class="lbl">Squash Bugs</span></button>
+      <button class="icon" data-open="game"><span class="glyph">🕹️</span><span class="lbl">Arcade</span></button>
       <button class="icon" data-open="contact"><span class="glyph">✉️</span><span class="lbl">Contact Me</span></button>
     </div>
     <div class="wallpaper-mark"><strong>AARYAN OS</strong>v5.0 · all systems nominal</div>
@@ -211,19 +211,71 @@
       </div>
     </section>
 
-    <section class="window" data-app="game" aria-label="debug game" style="width:480px">
+    <section class="window" data-app="game" aria-label="arcade" style="width:520px">
       <header class="win-bar">
         <div class="win-dots"><button class="win-close" data-close aria-label="Close">×</button><button class="win-min" data-min aria-label="Minimize">−</button></div>
         <button class="win-back" data-close>‹ home</button>
-        <span class="win-title">Squash Bugs</span><button class="win-close-x" data-close aria-label="Close window">✕</button>
+        <span class="win-title">Arcade</span><button class="win-close-x" data-close aria-label="Close window">✕</button>
       </header>
       <div class="win-body">
-        <div class="game-stats"><span>score <strong id="gScore">0</strong></span><span>time <strong id="gTime">20</strong>s</span><span>best <strong id="gBest">0</strong></span></div>
-        <div class="arena" id="arena">
-          <div class="msg" id="arenaMsg">
-            <div class="big">ready?</div>
-            <p>🐛 = +1 · 🦋 = +3 · 💣 = do NOT tap. production is in 20 seconds.</p>
-            <button class="btn btn-primary" id="gameStart">deploy →</button>
+        <!-- arcade menu -->
+        <div class="arcade-view" id="arcadeMenu">
+          <span class="eyebrow">arcade</span>
+          <h2 style="margin-bottom:6px;">Pick a game.</h2>
+          <p style="margin-bottom:18px;">Three tiny games I built into this OS. High scores live for your session.</p>
+          <div class="arcade-grid">
+            <button class="arcade-card" data-game="squash">
+              <span class="arcade-emoji">🐛</span>
+              <strong>Squash Bugs</strong>
+              <span class="arcade-desc">Debug reflexes. Tap bugs, dodge the 💣.</span>
+              <span class="arcade-best">best: <b id="bestSquash">0</b></span>
+            </button>
+            <button class="arcade-card" data-game="memory">
+              <span class="arcade-emoji">🧠</span>
+              <strong>Stack Match</strong>
+              <span class="arcade-desc">Memory game. Match my tech-stack pairs.</span>
+              <span class="arcade-best">best: <b id="bestMemory">—</b></span>
+            </button>
+            <button class="arcade-card" data-game="type">
+              <span class="arcade-emoji">⌨️</span>
+              <strong>Type Speed</strong>
+              <span class="arcade-desc">Type dev commands fast. Beat the clock.</span>
+              <span class="arcade-best">best: <b id="bestType">0</b></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- squash bugs -->
+        <div class="arcade-view" id="gameSquash" hidden>
+          <button class="arcade-back" data-arcade-back>‹ arcade</button>
+          <div class="game-stats"><span>score <strong id="gScore">0</strong></span><span>time <strong id="gTime">20</strong>s</span><span>best <strong id="gBest">0</strong></span></div>
+          <div class="arena" id="arena">
+            <div class="msg" id="arenaMsg">
+              <div class="big">ready?</div>
+              <p>🐛 = +1 · 🦋 = +3 · 💣 = do NOT tap. production is in 20 seconds.</p>
+              <button class="btn btn-primary" id="gameStart">deploy →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- stack match (memory) -->
+        <div class="arcade-view" id="gameMemory" hidden>
+          <button class="arcade-back" data-arcade-back>‹ arcade</button>
+          <div class="game-stats"><span>moves <strong id="mMoves">0</strong></span><span>pairs <strong id="mPairs">0</strong>/8</span><span>best <strong id="mBest">—</strong></span></div>
+          <div class="memory-board" id="memoryBoard"></div>
+          <div class="memory-done" id="memoryDone" hidden></div>
+        </div>
+
+        <!-- type speed -->
+        <div class="arcade-view" id="gameType" hidden>
+          <button class="arcade-back" data-arcade-back>‹ arcade</button>
+          <div class="game-stats"><span>typed <strong id="tScore">0</strong></span><span>time <strong id="tTime">25</strong>s</span><span>best <strong id="tBest">0</strong></span></div>
+          <div class="type-arena" id="typeArena">
+            <div class="msg" id="typeMsg">
+              <div class="big">ready?</div>
+              <p>type each command exactly and hit enter. 25 seconds on the clock.</p>
+              <button class="btn btn-primary" id="typeStart">start →</button>
+            </div>
           </div>
         </div>
       </div>
