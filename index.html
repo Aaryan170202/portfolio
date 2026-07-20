@@ -4,8 +4,23 @@
 <script>document.documentElement.classList.add('js');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aaryan Chipkar — aaryan.sys</title>
-<meta name="description" content="AARYAN OS — the interactive portfolio of Aaryan Chipkar, AI Engineer and founder of Nocaps. Open the apps, talk to the terminal, earn your compatibility report.">
+<title>Aaryan Chipkar — AI Engineer &amp; Full-Stack Developer | AARYAN OS</title>
+<meta name="description" content="AARYAN OS — the interactive portfolio of Aaryan Chipkar, AI Engineer and founder of Nocaps. Open the apps, talk to the terminal, play the arcade, earn your compatibility report.">
+<link rel="canonical" href="https://aaryan170202.github.io/portfolio/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Aaryan Chipkar — AI Engineer & Full-Stack Developer">
+<meta property="og:description" content="A portfolio you operate, not scroll. Boot into AARYAN OS: real terminal, arcade games, draggable apps — built by the founder of Nocaps.">
+<meta property="og:url" content="https://aaryan170202.github.io/portfolio/">
+<meta property="og:image" content="https://aaryan170202.github.io/portfolio/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aaryan Chipkar — AI Engineer & Full-Stack Developer">
+<meta name="twitter:description" content="A portfolio you operate, not scroll. Boot into AARYAN OS.">
+<meta name="twitter:image" content="https://aaryan170202.github.io/portfolio/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Aaryan Jayant Chipkar","jobTitle":"AI Engineer & Full-Stack Developer","url":"https://aaryan170202.github.io/portfolio/","email":"mailto:aaryanchipkar17@gmail.com","sameAs":["https://github.com/Aaryan170202","https://www.linkedin.com/in/aaryanchipkar","https://www.nocaps.in"]}
+</script>
 <meta name="theme-color" content="#0B1220">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230B1220'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='%234AE3B5' font-family='monospace' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,12 +35,18 @@
 
 <div class="boot" id="boot" role="status" aria-label="Loading">
   <div class="boot-log" id="bootLog"></div>
+  <div class="boot-bar"><i id="bootFill"></i></div>
   <div class="boot-skip">tap / press any key to skip</div>
 </div>
 
 <div id="os">
   <div id="desktop">
     <div class="mobile-status"><span id="mClock">--:--</span><span>aaryan.sys</span></div>
+    <div class="wall-id" aria-hidden="true">
+      <strong>Aaryan Chipkar</strong>
+      <span>AI Engineer &amp; Full-Stack Developer · Founder, Nocaps</span>
+      <em>→ open <b>Contact Me</b> to work together</em>
+    </div>
     <div class="icons" id="icons">
       <button class="icon hot" data-open="readme"><span class="glyph">📖</span><span class="lbl">Start Here</span></button>
       <button class="icon" data-open="about"><span class="glyph">👤</span><span class="lbl">About Me</span></button>
@@ -35,6 +56,7 @@
       <button class="icon" data-open="projects"><span class="glyph">🚀</span><span class="lbl">Projects</span></button>
       <button class="icon" data-open="terminal"><span class="glyph">›_</span><span class="lbl">terminal</span></button>
       <button class="icon" data-open="game"><span class="glyph">🕹️</span><span class="lbl">Arcade</span></button>
+      <button class="icon" data-open="store"><span class="glyph">🛍️</span><span class="lbl">App Store</span></button>
       <button class="icon" data-open="contact"><span class="glyph">✉️</span><span class="lbl">Contact Me</span></button>
     </div>
     <div class="wallpaper-mark"><strong>AARYAN OS</strong>v5.0 · all systems nominal</div>
@@ -47,7 +69,7 @@
       </header>
       <div class="win-body">
         <p><strong>Welcome to AARYAN OS</strong> — the portfolio of Aaryan Chipkar, AI Engineer &amp; founder of Nocaps.</p>
-        <p>There's nothing to scroll here. Everything is an app: open them, drag them around, close them. The terminal actually works. The game actually plays.</p>
+        <p>There's nothing to scroll here. Everything is an app: open them, drag them anywhere, even uninstall the ones you don't like (the App Store has your back). The terminal actually works. The arcade actually plays.</p>
         <p>While you explore, <strong>AMORE NET</strong> (the matching engine from Nocaps) collects behavioral signals about you. Complete the side quest and you'll get your official visitor × Aaryan compatibility report.</p>
         <p class="agent-tip">hint: check the signals counter in the corner. it knows what you haven't found yet.</p>
       </div>
@@ -289,7 +311,7 @@
       </header>
       <div class="win-body">
         <p><strong>Tell me about the project.</strong> Have something in mind, or just exploring options? I read every message myself.</p>
-        <p><a href="mailto:aaryanchipkar17@gmail.com">aaryanchipkar17@gmail.com</a></p>
+        <a class="email-chip" href="mailto:aaryanchipkar17@gmail.com">✉️&nbsp; aaryanchipkar17@gmail.com</a>
         <div class="social-row">
           <a href="https://github.com/Aaryan170202" aria-label="GitHub" target="_blank" rel="noopener">GH</a>
           <a href="https://www.linkedin.com/in/aaryanchipkar" aria-label="LinkedIn" target="_blank" rel="noopener">IN</a>
@@ -300,6 +322,19 @@
           <label>message<textarea name="message" rows="4" required></textarea></label>
           <button type="submit" class="btn btn-primary">Send message</button>
         </form>
+      </div>
+    </section>
+    <section class="window" data-app="store" aria-label="app store" style="width:540px">
+      <header class="win-bar">
+        <div class="win-dots"><button class="win-close" data-close aria-label="Close">×</button><button class="win-min" data-min aria-label="Minimize">−</button></div>
+        <button class="win-back" data-close>‹ home</button>
+        <span class="win-title">App Store</span><button class="win-close-x" data-close aria-label="Close window">✕</button>
+      </header>
+      <div class="win-body">
+        <span class="eyebrow">app store</span>
+        <h2 style="margin-bottom:6px;">Install &amp; uninstall.</h2>
+        <p style="margin-bottom:16px;">Hover an app icon and tap its <b>✕</b> to remove it from the desktop — it lands here. Re-install anytime. Core apps stay put.</p>
+        <div class="store-list" id="storeList"></div>
       </div>
     </section>
   </div>
