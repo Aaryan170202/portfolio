@@ -26,7 +26,8 @@
     {id:'game',  mid:'minigame.debug_run', name:'Play an arcade game',how:'open Arcade, finish any one game'},
     {id:'visit', mid:'product.visited',    name:'Visit nocaps.in',          how:'tap a nocaps.in link (in Projects or Experience)'},
     {id:'wall',  mid:'wallpaper.disturbed',name:'Disturb the wallpaper',    how:'tap empty home-screen space 3 times'},
-    {id:'inbox', mid:'inbox.reached',      name:'Reach the inbox',          how:'open Contact Me'}
+    {id:'inbox', mid:'inbox.reached',      name:'Reach the inbox',          how:'open Contact Me'},
+    {id:'store', mid:'store.used',         name:'Use the App Store',        how:'uninstall any app (its ✕), or install one from the Store'}
   ];
   var got={};
   var sigList=$('#signalList');
@@ -77,7 +78,20 @@
   var APPS={
     readme:'Start Here', about:'About Me', track:'Experience',
     skills:'Skills', services:'Services', projects:'Projects',
-    terminal:'Terminal', game:'Arcade', contact:'Contact Me'
+    terminal:'Terminal', game:'Arcade', store:'App Store', contact:'Contact Me'
+  };
+  // metadata for the App Store list. protected apps can't be uninstalled.
+  var APP_META={
+    readme:{emoji:'📖',desc:'How this OS works — start here.',locked:true},
+    about:{emoji:'👤',desc:'Who I am and what I build.'},
+    track:{emoji:'📈',desc:'Systems and products I\u2019ve shipped.'},
+    skills:{emoji:'🧰',desc:'The stack I work in.'},
+    services:{emoji:'🤝',desc:'How I can help your project.'},
+    projects:{emoji:'🚀',desc:'Nocaps, and selected work.'},
+    terminal:{emoji:'\u203a_',desc:'A real shell. Try \u2018help\u2019.',locked:true},
+    game:{emoji:'🕹️',desc:'Three tiny games I built in.'},
+    store:{emoji:'🛍️',desc:'This store itself.',locked:true},
+    contact:{emoji:'✉️',desc:'Get in touch — I read every message.',locked:true}
   };
   // Icon captions and window title bars are hand-written in the HTML too (so the
   // page still reads correctly with JS disabled), but here they get reasserted
@@ -127,6 +141,7 @@
       if(Object.keys(openedDistinct).length>=5)award('apps');
       if(app==='contact')award('inbox');
       if(app==='game')showArcade('menu');
+      if(app==='store')renderStore();
       if(app==='terminal'&&!isMobile())setTimeout(function(){$('#termInput').focus()},80);
     }
     focusWin(w);
@@ -225,10 +240,86 @@
   function saveIcons(){store.set(ICON_KEY,JSON.stringify(currentLayout()));}
   function resetIcons(){
     store.remove(ICON_KEY);
+    // also reinstall every app
+    iconEls.forEach(function(ic){installed[ic.dataset.open]=true;});
+    saveInstalled();applyInstalledState();renderStore();
     applyLayout(defaultLayout());
     iconEls.forEach(clampIcon);
-    toast('desktop layout reset');
+    toast('desktop reset — all apps reinstalled');
   }
+
+  /* ============ App Store: install / uninstall ============ */
+  var INSTALL_KEY='aaryan-os-installed-v1';
+  var installed={};
+  iconEls.forEach(function(ic){installed[ic.dataset.open]=true;});
+  (function loadInstalled(){
+    var saved=null;
+    try{saved=JSON.parse(store.get(INSTALL_KEY)||'null')}catch(e){saved=null}
+    if(saved)Object.keys(saved).forEach(function(k){if(k in installed)installed[k]=saved[k];});
+  })();
+  function saveInstalled(){store.set(INSTALL_KEY,JSON.stringify(installed));}
+  function isLocked(app){return APP_META[app]&&APP_META[app].locked;}
+
+  // add an uninstall (✕) button to every removable icon
+  iconEls.forEach(function(ic){
+    var app=ic.dataset.open;
+    if(isLocked(app))return;
+    var x=document.createElement('button');
+    x.className='icon-x';
+    x.setAttribute('aria-label','Uninstall '+APPS[app]);
+    x.textContent='✕';
+    // stop the drag/open handlers from firing when the X is used
+    x.addEventListener('pointerdown',function(e){e.stopPropagation();});
+    x.addEventListener('click',function(e){e.stopPropagation();e.preventDefault();uninstallApp(app);});
+    ic.appendChild(x);
+  });
+
+  function applyInstalledState(){
+    iconEls.forEach(function(ic){
+      ic.style.display=(installed[ic.dataset.open]===false)?'none':'';
+    });
+  }
+  function uninstallApp(app){
+    if(isLocked(app))return;
+    installed[app]=false;
+    applyInstalledState();saveInstalled();renderStore();
+    toast(APPS[app]+' uninstalled → find it in the App Store');
+    award('store');
+  }
+  function installApp(app){
+    installed[app]=true;
+    applyInstalledState();saveInstalled();renderStore();
+    var ic=document.querySelector('.icon[data-open="'+app+'"]');
+    if(ic)clampIcon(ic);
+    toast(APPS[app]+' installed');
+    award('store');
+  }
+  function renderStore(){
+    var list=$('#storeList');if(!list)return;
+    list.innerHTML='';
+    Object.keys(APPS).forEach(function(app){
+      var meta=APP_META[app]||{};
+      var row=document.createElement('div');
+      row.className='store-item';
+      row.innerHTML='<span class="store-emoji">'+(meta.emoji||'▪')+'</span>'+
+        '<div class="store-meta"><strong>'+APPS[app]+'</strong><span>'+(meta.desc||'')+'</span></div>';
+      var btn=document.createElement('button');
+      btn.className='store-btn';
+      if(isLocked(app)){
+        btn.classList.add('locked');btn.textContent='core';btn.disabled=true;
+      }else if(installed[app]===false){
+        btn.classList.add('get');btn.textContent='Install';
+        btn.addEventListener('click',function(){installApp(app)});
+      }else{
+        btn.classList.add('inst');btn.textContent='Uninstall';
+        btn.addEventListener('click',function(){uninstallApp(app)});
+      }
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
+  }
+  applyInstalledState();
+  renderStore();
 
   // lay them out now (and keep them sensible on resize if never moved)
   loadIcons();
@@ -357,8 +448,11 @@
   function selectCurrent(){
     if(overlayOpen())return;
     if($$('.window.open').length)return;
-    if(navIdx<0){highlight(0);return;}
-    if(navIcons[navIdx])openApp(navIcons[navIdx].dataset.open);
+    if(navIdx<0||!navIcons[navIdx]||navIcons[navIdx].style.display==='none'){
+      for(var k=0;k<navIcons.length;k++){if(navIcons[k].style.display!=='none'){highlight(k);return;}}
+      return;
+    }
+    openApp(navIcons[navIdx].dataset.open);
   }
   var ARROW_DIR={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
   window.addEventListener('keydown',function(e){
@@ -550,6 +644,7 @@
       if(lines[i][1])d.className=lines[i][1];
       d.textContent=lines[i][0];
       log.appendChild(d);i++;
+      var f=$('#bootFill');if(f)f.style.width=Math.round(i/lines.length*100)+'%';
     },260);
     boot.addEventListener('click',endBoot);
     window.addEventListener('keydown',function once(){endBoot();window.removeEventListener('keydown',once)});
